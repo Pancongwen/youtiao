@@ -129,22 +129,37 @@ def get_last_defendant_line_number(sheet):
             break
     return line_number
 
-if __name__ == "__main__":    
+if __name__ == "__main__":
+    print('Letter Generation Program Start')
+    print('\n> Read information and print')
     info = read_xlsx('info.xlsx')
     date = str(info['B1'].value)
-    lawsuit_number = str(info['B2'].value)
+    print('-- 日期: '+date)
+    row_lawsuit_number = str(info['B2'].value)
+    print('-- 初始案号: '+row_lawsuit_number)
     lawsuit_content = info['B3'].value
+    print('-- 案件内容: '+lawsuit_content)
     client_name = info['B4'].value
+    print('-- 委托人: '+client_name)
     law_firm_name = info['B5'].value
+    print('-- 律所: '+law_firm_name)
     lawyer_name = info['B6'].value
+    print('-- 律师: '+lawyer_name)
     court_name = info['B7'].value
+    print('-- 法院: '+lawyer_name)
 
+    print('\n> Calculate the number of letters')
     last_defendant_line_number = get_last_defendant_line_number(info)
+    print('-- 预期文件生成数: '+str(last_defendant_line_number-10))
 
+    print('\n> Generate letters')
+    print('{0:{3}<10}\t{1:{3}<0}\t{2:{3}<10}'.format('子案号', '被告姓名', '身份证号', chr(12288)))
     for defendant_line in range(10, last_defendant_line_number):
         defendant_name = info['A'+str(defendant_line)].value
         defendant_ID = info['B'+str(defendant_line)].value
-        lawsuit_number += str(defendant_line -9)
+        sub_lawsuit_number = '-'+str(defendant_line-9)
+        lawsuit_number = row_lawsuit_number + sub_lawsuit_number
+        print('{0:{3}<10}\t{1:{3}<10}\t{2:{3}<30}'.format(lawsuit_number, defendant_name, defendant_ID, chr(12288)))
 
         doc = Document()
         letter_doc = NoticeLetterofLawyerParticipation(
