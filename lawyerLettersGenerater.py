@@ -8,6 +8,7 @@ Mail: peter.pancongwen@gmail.com
 from docx import Document
 from docx.shared import Pt, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from openpyxl import load_workbook
 
 
 class NoticeLetterofLawyerParticipation():
@@ -111,31 +112,50 @@ class NoticeLetterofLawyerParticipation():
         self._write_content(self.doc, self.lawsuit_content, self.client_name, self.defendant_name, self.defendant_ID, self.lawyer_name)
         self._write_close(self.doc, self.court_name)
         self._write_signature(self.doc, self.law_firm_name, self.year, self.month, self.day)
-        doc.save(filepath)
+        doc.save(filepath+self.defendant_name+"_"+self.defendant_ID+".docx")
 
+def read_xlsx(infofile):
+    wb = load_workbook(filename = infofile)
+    sheet = wb['info']
+    return sheet
 
-if __name__ == "__main__":
-    doc = Document()
-    date = "20210417"
-    court_name = "西红市西红区人民法院"
-    lawsuit_number = "3609-1"
-    lawsuit_content = "追偿权纠纷"
-    client_name = "一家公司有限公司"
-    defendant_name = "马冬梅"
-    defendant_ID = "320110199512121313"
-    law_firm_name = "律师事务所"
-    lawyer_name = "油条"
+def get_last_defendant_line_number(sheet):
+    line_number = 10
+    while True:
+        defendant_name_cell = 'A' + str(line_number)
+        if sheet[defendant_name_cell].value is not None:
+            line_number += 1
+        else:
+            break
+    return line_number
 
-    letter_doc = NoticeLetterofLawyerParticipation(
-        date,
-        court_name,
-        lawsuit_number,
-        lawsuit_content,
-        client_name,
-        defendant_name,
-        defendant_ID,
-        law_firm_name,
-        lawyer_name
-    )
+if __name__ == "__main__":    
+    info = read_xlsx('info.xlsx')
+    date = str(info['B1'].value)
+    lawsuit_number = str(info['B2'].value)
+    lawsuit_content = info['B3'].value
+    client_name = info['B4'].value
+    law_firm_name = info['B5'].value
+    lawyer_name = info['B6'].value
+    court_name = info['B7'].value
 
-    letter_doc.write_doc(doc, "test.docx")
+    last_defendant_line_number = get_last_defendant_line_number(info)
+
+    for defendant_line in range(10, last_defendant_line_number):
+        defendant_name = info['A'+str(defendant_line)].value
+        defendant_ID = info['B'+str(defendant_line)].value
+        lawsuit_number += str(defendant_line -9)
+
+        doc = Document()
+        letter_doc = NoticeLetterofLawyerParticipation(
+            date,
+            court_name,
+            lawsuit_number,
+            lawsuit_content,
+            client_name,
+            defendant_name,
+            defendant_ID,
+            law_firm_name,
+            lawyer_name
+        )
+        letter_doc.write_doc(doc, "./docs/")
